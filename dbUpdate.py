@@ -4,7 +4,7 @@ import sys
 from libs.Oracle import Table, getArgs
 
 def main():
-    tableName, keys, debug = getArgs(sys.argv, "dbUpdate.py", minArgs=3)
+    tableName, keys, debug = getArgs(sys.argv, minArgs=3)
     with Table(tableName=tableName, debug=debug) as conn:
         ret = conn.update(**keys)
         print(f"Update result: {ret}")

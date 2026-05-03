@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# 関数の練習
 def func3(a, key='リンゴ'):
     try:
         if type(a) is int:

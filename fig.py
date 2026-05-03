@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
-# 図形
-# fig
+# -*- coding: utf-8 -*-
+# 図形クラスのコード
+# # fig
 import sys
 
 # 図形クラス(三角形クラスとかのスーパークラス＝親クラス)

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# 関数の練習
 def func2(a):
     a[1] = 6
     return a[0] * a[2]

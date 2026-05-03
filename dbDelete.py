@@ -4,7 +4,7 @@ import sys
 from libs.Oracle import Table, getArgs
 
 def main():
-    tableName, keys, debug = getArgs(sys.argv, "dbDelete.py", minArgs=3)
+    tableName, keys, debug = getArgs(sys.argv, minArgs=3)
     with Table(tableName=tableName, debug=debug) as conn:
         ret = conn.delete(**keys)
         print(f"Delete result: {ret}")
