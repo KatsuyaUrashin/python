@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # 図形
 # fig
 import sys
