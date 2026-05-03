@@ -1,0 +1,12 @@
+select
+    SHAIN_CD,
+    SHIMEI,
+    TO_CHAR(UMARE, 'YYYY/MM/DD') AS UMARE
+from ABC
+where 1=1
+/*$SHAIN_CD*/       AND SHAIN_CD =    :SHAIN_CD
+/*$SHIMEI*/         AND SHIMEI   =    :SHIMEI
+/*$LIKE_SHIMEI*/    AND SHIMEI   LIKE :LIKE_SHIMEI
+/*$UMARE*/          AND UMARE    =    TO_DATE(:UMARE, 'YYYY/MM/DD')
+/*$UMARE_LOW*/      AND UMARE    >=   TO_DATE(:UMARE_LOW, 'YYYY/MM/DD')
+/*$UMARE_HIGH*/     AND UMARE    <=   TO_DATE(:UMARE_HIGH, 'YYYY/MM/DD')
