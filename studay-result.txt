@@ -1,0 +1,7 @@
+# 成果
+<2026/05/03>
+・Oralce接続の確認：sqlplus, A5 Mk-2, python
+・自作Oralceアクセス関数の提供と簡単な実演
+・Copilotの利点の簡単な説明
+・次回までにGitと利用とCopilotの利用が出来るようにする
+https://vscode.dev/tunnel/macalocal/Users/urashinkatsuya/Library/Mobile Documents/com~apple~CloudDocs/python

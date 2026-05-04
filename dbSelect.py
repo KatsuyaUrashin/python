@@ -1,7 +1,7 @@
  #!/usr/bin/env python3
 # コマンドライン引数でテーブル名と任意のキー:値ペアを受け取り、テーブルから条件に合う行を選択して表示するスクリプト
 import sys
-from libs.Oracle import Table, getArgs
+from libs.oraAc import Table, getArgs
 
 def main():
     tableName, keys, debug = getArgs(sys.argv)
