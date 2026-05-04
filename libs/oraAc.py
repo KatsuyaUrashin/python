@@ -2,6 +2,11 @@
 # Oracleテーブルアクセスクラス
 import sys
 import oracledb
+from socket import gethostname
+
+DB_CONFIG = {'SAKUDELL-HT87G25': "localhost:1521/FREE",
+             'MacA.local': "localhost:1521/FREEPDB1",
+             }
 
 class Table:
     """Oracleテーブルアクセスクラス
@@ -70,10 +75,12 @@ class Table:
         Returns:
             any: 接続情報
         """
+        hostname = gethostname()
+        dbConfig = DB_CONFIG.get(hostname)
         return oracledb.connect(
             user="system",
             password="oracle123",
-            dsn = "localhost:1521/FREEPDB1",   # ← これが一番シンプル
+            dsn = dbConfig,   # ← これが一番シンプル
             # 必要なら以下を追加
         # config_dir="/path/to/wallet",   # Autonomous DB用
     )
