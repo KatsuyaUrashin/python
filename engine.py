@@ -2,7 +2,7 @@
 # エンジンのコード
 import sys
 # from sys import argv
-from FileAc import FIL
+from libs.FileAc import FIL
 # import map1
 from maps.map1 import procMap
 CRLF = "\n"

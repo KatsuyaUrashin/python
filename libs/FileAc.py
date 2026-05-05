@@ -16,11 +16,10 @@ class FIL:
 
     # with構文で使うためのメソッド
     def __exit__(self, exc_type, exc_val, exc_tb):
-        print(f"[{self.fn}, exc_type:{exc_type}, exc_val:{exc_val}, exc_tb:{exc_tb}] 後処理: 終了")
+        # print(f"[{self.fn}, exc_type:{exc_type}, exc_val:{exc_val}, exc_tb:{exc_tb}] 後処理: 終了")
         # ここで例外処理を行うことも可能
         print(f"[{self.fn}]ファイルをクローズする")
         self.fp.close()
-        print(f"テーブルにインサートしてコミットする。")
 
     # ファイルを行ごとに読み込むメソッド
     def readLine(self):
