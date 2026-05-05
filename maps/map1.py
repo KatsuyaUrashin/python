@@ -7,6 +7,7 @@ KEYS = None
 def procMap(i, data, option):
     global KEYS
     if i == 0:
+        print(f"data: {data}")
         # キーの作成
         KEYS = data
         return None

@@ -11,15 +11,20 @@ DB_CONFIG = {'SAKUDELL-HT87G25': "localhost:1521/FREE",
 class Table:
     """Oracleテーブルアクセスクラス
     """
-    def __init__(self, tableName=None, db:Table=None, debug=False):
+    def __init__(self, tableName=None, db:Table=None, bulkCount=1000, debug=False):
         """コンストラクタ
 
         Args:
             tableName (str, optional): テーブル名. Defaults to None.
             db (Table, optional): テーブルアクセスハンドル(テーブル違いで同じセッション利用). Defaults to None.
+            bulkCount (int, optional): バルクインサートの件数. Defaults to 1000.
             debug (bool, optional): デバッグするか. Defaults to False.
         """
         self.debug = debug
+        self.bulkCount = bulkCount
+        self.bulkCountCurrent = 0
+        self.insertCount = 0
+        self.insertDataList = []
         # テーブルアクセスハンドルがあればそれを利用、なければ新規に接続
         if db is not None:
             self.connection = db.connection
@@ -93,11 +98,21 @@ class Table:
             self.connection.close()
             self.newConnection = False 
     def commit(self):
+        # バルクインサートの残りがあればコミット前に実行する
+        self._insertMany()
         self.connection.commit()
+        self._resetInsertData()
+        print("コミットした")
         self.tranFlag = False
     def rollback(self):
         self.connection.rollback()
+        self._resetInsertData()
         self.tranFlag = False
+        print("ロールバックした")
+    def _resetInsertData(self):
+        self.insertDataList = []
+        self.bulkCountCurrent = 0
+        self.insertCount = 0
     def _printDebugSql(self, sqlString, params):
         if self.debug:
             print("Executing SQL:")
@@ -124,6 +139,8 @@ class Table:
         for key in params.keys():
             # 置換対象ががない場合はエラーで終了
             if f"/*${key}*/" not in sqlString:
+                if self.debug:
+                    print(f"SQL template:\n{sqlString}")
                 print(f"Parameter '{key}' is not found in SQL template") 
                 sys.exit(1)
             sqlString = sqlString.replace(f"/*${key}*/", f"   /*{key}*/")  # パラメータがあればそのまま
@@ -161,10 +178,33 @@ class Table:
             self.tranFlag = True
             return {self.tableName: cursor.rowcount}
 
-    def insert(self, **params):
-        """登録実行
+    def insertOne(self, **params):
+        """1件登録実行
         """
         return self._execute("insert", **params)
+    
+    def insert(self, params):
+        """登録実行(実際には件数溜まるまで保持する)
+        """
+        self.insertCount += 1
+        self.insertDataList.append(params)
+        self.bulkCountCurrent += 1
+        if self.bulkCountCurrent >= self.bulkCount:
+            self._insertMany()
+        return {self.tableName: self.insertCount}
+
+    def _insertMany(self):
+        """複数登録実行
+        """
+        # 件数が溜まったら登録して保持しているデータをクリアする
+        if self.bulkCountCurrent > 0:
+            sqlString = self._makeSqlString("insert", self.insertDataList[0])
+            with self.connection.cursor() as cursor:
+                cursor.executemany(sqlString, self.insertDataList)
+                print(f"Inserted {cursor.rowcount}/{self.insertCount} rows into {self.tableName}")
+                self.tranFlag = True
+            self.insertDataList = []
+            self.bulkCountCurrent = 0   
 
     def delete(self, **params):
         """削除実行
@@ -214,3 +254,31 @@ def getArgs(argv, minArgs=2):
             #  SHIMEIならアンダースコアを空白にする
             keys[key.upper()] = value
     return tableName, keys, debug
+
+
+def getFileArgs(argv):
+    """ファイル名の引数を取得
+
+    Args:
+        argv (list): 引数(sys.argv)プログラム名 テーブル名 ファイル名 --debug
+
+    Returns:
+        str, str, debug: テーブル名, ファイル名, デバッグフラグ
+    """
+    errMessage = f"Usage: python {argv[0]} <tableName> <fileName> [--debug]"
+    if len(argv) < 3:
+        print(errMessage)
+        sys.exit(1)
+
+    tableName = argv[1].upper()
+    fileName = argv[2]
+    debug = False
+
+    if len(argv) > 3:
+        if argv[3] == "--debug":
+            debug = True
+        else:
+            print(errMessage)
+            sys.exit(1)
+
+    return tableName, fileName, debug
