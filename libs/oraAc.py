@@ -188,7 +188,7 @@ def getArgs(argv, minArgs=2):
     """
     keyValueStr0 = "<key:value> "
     keyValueStr = keyValueStr0 * (minArgs - 2)
-    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [--debug]"
+    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [allset] [--debug]"
     # 引数の数は、テーブル名 + 任意のキー:値ペアでminArgs以上でなければエラー
     if minArgs > len(argv):
         print(errMessage)
@@ -202,6 +202,9 @@ def getArgs(argv, minArgs=2):
     for arg in argv[2:]:
         if arg == "--debug":
             debug = True
+        elif arg == "allset":
+            # allsetが指定された場合、キー:値ペアは不要
+            pass
         else:   
             keyValue = arg.split(":")
             if len(keyValue) != 2:
