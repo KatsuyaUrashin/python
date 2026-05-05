@@ -102,13 +102,13 @@ class Table:
         self._insertMany()
         self.connection.commit()
         self._resetInsertData()
-        print("コミットした")
+        print("***** コミットしました。 *****")
         self.tranFlag = False
     def rollback(self):
         self.connection.rollback()
         self._resetInsertData()
         self.tranFlag = False
-        print("ロールバックした")
+        print("***** ロールバックしました。 *****")
     def _resetInsertData(self):
         self.insertDataList = []
         self.bulkCountCurrent = 0
