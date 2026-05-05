@@ -1,4 +1,4 @@
-INSERT INTO abc VALUES ('12345678', 'Katsuya Urashin', to_date('1962/01/31','YYYY/MM/DD', '1');
+INSERT INTO abc VALUES ('12345678', 'Katsuya Urashin', to_date('1962/01/31','YYYY/MM/DD'), '1');
 INSERT INTO abc VALUES ('11111111', 'Minami Higashi', to_date('1996/10/09','YYYY/MM/DD'), '2');
 INSERT INTO abc VALUES ('33333333', 'Yukino Urashin', to_date('1969/10/10','YYYY/MM/DD'), '2');
 COMMIT;
