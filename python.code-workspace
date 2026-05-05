@@ -4,18 +4,4 @@
 			"path": "."
 		}
 	],
-	"settings": {
-		"python-envs.pythonProjects": [
-			{
-				"path": ".",
-				"envManager": "ms-python.python:system",
-				"packageManager": "ms-python.python:pip"
-			},
-			{
-				"path": "libs/Oracle.py",
-				"envManager": "ms-python.python:venv",
-				"packageManager": "ms-python.python:pip"
-			}
-		]
-	}
 }
