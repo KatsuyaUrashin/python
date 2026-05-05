@@ -1,0 +1,8 @@
+delete from ABC
+where 1=1
+/*$SHAIN_CD*/       AND SHAIN_CD =    :SHAIN_CD
+/*$SHIMEI*/         AND SHIMEI   =    :SHIMEI
+/*$LIKE_SHIMEI*/    AND SHIMEI   LIKE :LIKE_SHIMEI
+/*$UMARE*/          AND UMARE    =    TO_DATE(:UMARE, 'YYYY/MM/DD')
+/*$UMARE_FROM*/     AND UMARE    >=   TO_DATE(:UMARE_FROM, 'YYYY/MM/DD')
+/*$UMARE_TO*/       AND UMARE    <=   TO_DATE(:UMARE_TO, 'YYYY/MM/DD')
