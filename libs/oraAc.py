@@ -100,15 +100,17 @@ class Table:
     def commit(self):
         # バルクインサートの残りがあればコミット前に実行する
         self._insertMany()
-        self.connection.commit()
-        self._resetInsertData()
-        print("***** コミットしました。 *****")
-        self.tranFlag = False
+        if self.tranFlag:
+            self.connection.commit()
+            self._resetInsertData()
+            print("***** コミットしました。 *****")
+            self.tranFlag = False
     def rollback(self):
-        self.connection.rollback()
-        self._resetInsertData()
-        self.tranFlag = False
-        print("***** ロールバックしました。 *****")
+        if self.tranFlag:
+            self.connection.rollback()
+            self._resetInsertData()
+            self.tranFlag = False
+            print("***** ロールバックしました。 *****")
     def _resetInsertData(self):
         self.insertDataList = []
         self.bulkCountCurrent = 0
@@ -136,6 +138,9 @@ class Table:
         if sqlString is None:
             print(f"SQL template file({self._getTemplateSqlFileName(queryType)}) for '{queryType}' is None")
             sys.exit(1)
+        # keysetが指定されている場合、SQLテンプレートにあるkeyを取得する処理にする
+        if params.get("keyset"):
+            return self._extractKeysFromSql(sqlString)
         for key in params.keys():
             # 置換対象ががない場合はエラーで終了
             if f"/*${key}*/" not in sqlString:
@@ -149,6 +154,27 @@ class Table:
         self._printDebugSql(sqlString, params)
         return sqlString
     
+    def _extractKeysFromSql(self, sqlString):
+        """SQLテンプレートからキーを抽出する
+
+        Args:
+            sqlString (str): SQLテンプレート文字列
+
+        Returns:
+            list: 抽出したキーのリスト
+        """
+        keys = []
+        for line in sqlString.splitlines():
+            if "/*$" in line:
+                start = line.find("/*$") + 3
+                end = line.find("*/", start)
+                if end > start:
+                    key = line[start:end].strip()
+                    # 同じキーがなければリストに追加
+                    if key not in keys:
+                        keys.append(key)
+        return keys
+    
     def select(self, **params):
         """検索実行
 
@@ -157,6 +183,8 @@ class Table:
         """
         # SQLで指定のパラメータのみ条件に残す
         sqlString = self._makeSqlString("select", params)
+        if type(sqlString) == list:
+            return sqlString
         with self.connection.cursor() as cursor:
             cursor.execute(sqlString, **params)
             columns = [col.name for col in cursor.description]
@@ -173,6 +201,8 @@ class Table:
             dic: {テーブル名: 件数}
         """
         sqlString = self._makeSqlString(queryType, params)
+        if type(sqlString) == list:
+            return sqlString
         with self.connection.cursor() as cursor:
             cursor.execute(sqlString, **params)
             self.tranFlag = True
@@ -245,6 +275,9 @@ def getArgs(argv, minArgs=2):
         elif arg == "allset":
             # allsetが指定された場合、キー:値ペアは不要
             pass
+        elif arg == "keyset":
+            # keysetが指定された場合、キーを確認する指定にする
+            keys["keyset"] = True
         else:   
             keyValue = arg.split(":")
             if len(keyValue) != 2:

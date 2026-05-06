@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # コマンドライン引数でテーブル名と任意のキー:値ペアを受け取り、テーブルから行を削除するスクリプト
 import sys
-from libs.oraAc import Table, getArgs
+from libs.OraAc import Table, getArgs
 
 def main():
     # コマンドライン引数からテーブル名とキー:値ペアを取得
