@@ -258,7 +258,7 @@ def getArgs(argv, minArgs=2):
     """
     keyValueStr0 = "<key:value> "
     keyValueStr = keyValueStr0 * (minArgs - 2)
-    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [allset] [--debug]"
+    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [allset] [keyset] [--debug]"
     # 引数の数は、テーブル名 + 任意のキー:値ペアでminArgs以上でなければエラー
     if minArgs > len(argv):
         print(errMessage)
