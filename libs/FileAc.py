@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 # ファイルアクセスのコード
 class FIL:
+    """ファイルアクセスクラス
+
+    Returns:
+        FIL: ファイルアクセスクラス
+    """
     # ファイルアクセスのクラス
     def __init__(self, fName, enc='utf-8', delimt='|'):
         # ファイルをオープン
@@ -23,5 +28,11 @@ class FIL:
 
     # ファイルを行ごとに読み込むメソッド
     def readLine(self):
+        """ファイルを行毎に読み込む
+            ・行を分割して空白を除去してリストに格納する
+
+        Returns:
+            [str]: 読み込んだデータ
+        """
         # 行を読み込んで分割して空白除去
         return [[d.strip() for d in line.split(self.delimt)] for line in self.fp]
