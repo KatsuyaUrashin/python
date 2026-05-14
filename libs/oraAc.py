@@ -135,6 +135,7 @@ class Table:
         """
         # SQLで指定のパラメータのみ条件に残す
         sqlString = self.sqls.get(queryType)
+        # SQLファイルがない場合はエラーで終了
         if sqlString is None:
             print(f"SQL template file({self._getTemplateSqlFileName(queryType)}) for '{queryType}' is None")
             sys.exit(1)
