@@ -1,10 +1,12 @@
 def func4(a, m='+', b=0):   # =をつけるとデフォルト値指定
+    # 指定された演算子に基づいて計算処理を実行
     try:
         if m == '*':
             return a * b
         elif m == '+':
             return a + b
         elif m == '/':
+            # ゼロ除算チェック
             try:
                 if b == 0:
                     return None

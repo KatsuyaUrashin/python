@@ -4,7 +4,9 @@ import sys
 from libs.OraAc import Table, getArgs
 
 def main():
+    # コマンドライン引数からテーブル名とキー:値ペアを取得
     tableName, keys, debug = getArgs(sys.argv, minArgs=3)
+    # データベーステーブルに接続して行を挿入
     with Table(tableName=tableName, debug=debug) as conn:
         ret = conn.insert(**keys)
         print(f"Insert result: {ret}")
