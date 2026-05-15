@@ -15,7 +15,6 @@ build/*
 *.swp
 .DS_Store
 .idea/
-.vscode/
 __pycache__/
 **/.DS_Store
 libs/__init__.py
