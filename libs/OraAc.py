@@ -258,8 +258,8 @@ def getArgs(argv, minArgs=2):
         str, dict, debug: テーブル名, 項目の辞書, デバッグフラグ
     """
     keyValueStr0 = "<key:value> "
-    keyValueStr = keyValueStr0 * (minArgs - 2)
-    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [allset] [keyset] [--debug]"
+    keyValueStr =  "[keyset] " if (minArgs - 2) <= 0 else "allset|keyset|" + keyValueStr0 * (minArgs - 2)
+    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [--debug]"
     # 引数の数は、テーブル名 + 任意のキー:値ペアでminArgs以上でなければエラー
     if minArgs > len(argv):
         print(errMessage)
