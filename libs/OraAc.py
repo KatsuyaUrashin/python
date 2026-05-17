@@ -11,11 +11,11 @@ DB_CONFIG = {'SAKUDELL-HT87G25': "localhost:1521/FREE",
 class Table:
     """Oracleテーブルアクセスクラス
     """
-    def __init__(self, tableName=None, db:Table=None, bulkCount=1000, debug=False):
+    def __init__(self, tableName, db:Table=None, bulkCount=1000, debug=False):
         """コンストラクタ
 
         Args:
-            tableName (str, optional): テーブル名. Defaults to None.
+            tableName (str): テーブル名
             db (Table, optional): テーブルアクセスハンドル(テーブル違いで同じセッション利用). Defaults to None.
             bulkCount (int, optional): バルクインサートの件数. Defaults to 1000.
             debug (bool, optional): デバッグするか. Defaults to False.
@@ -32,6 +32,9 @@ class Table:
         else:
             self.connection = self._get_connection()
             self.newConnection = True
+        # テーブル名がNoneはNG
+        if tableName is None:
+            raise ValueError("tableName must be provided")
         self.tableName = tableName
         # SQLファイルを読み込む
         self.sqls = {}
@@ -81,7 +84,7 @@ class Table:
             any: 接続情報
         """
         hostname = gethostname()
-        dbConfig = DB_CONFIG.get(hostname)
+        dbConfig = DB_CONFIG[hostname]
         return oracledb.connect(
             user="system",
             password="oracle123",
@@ -260,19 +263,14 @@ def getArgs(argv, minArgs=2):
     keyValueStr0 = "<key:value> "
     keyValueStr =  "[keyset] " if (minArgs - 2) <= 0 else "allset|keyset|" + keyValueStr0 * (minArgs - 2)
     errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [--debug]"
-    # 引数の数は、テーブル名 + 任意のキー:値ペアでminArgs以上でなければエラー
-    if minArgs > len(argv):
-        print(errMessage)
-        sys.exit(1)
 
-    # 第一引数はテーブル名
-    tableName = argv[1].upper()  # テーブル名は大文字に変換
-    
     keys = {}
     debug = False
+    ignoreArgNum = 0
     for arg in argv[2:]:
         if arg == "--debug":
             debug = True
+            ignoreArgNum += 1
         elif arg == "allset":
             # allsetが指定された場合、キー:値ペアは不要
             pass
@@ -287,6 +285,15 @@ def getArgs(argv, minArgs=2):
             key, value = keyValue
             #  SHIMEIならアンダースコアを空白にする
             keys[key.upper()] = value
+
+    # 引数の数は、テーブル名 + 任意のキー:値ペアでminArgs以上でなければエラー
+    if minArgs > len(argv) - ignoreArgNum:
+        print(errMessage)
+        sys.exit(1)
+
+    # 第一引数はテーブル名
+    tableName = argv[1].upper()  # テーブル名は大文字に変換
+    
     return tableName, keys, debug
 
 
