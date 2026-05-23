@@ -7,28 +7,34 @@ from socket import gethostname
 DB_CONFIG = {'SAKUDELL-HT87G25': "localhost:1521/FREE",
              'MacA.local': "localhost:1521/FREEPDB1",
              }
-
+LOG_TABLE_NAME = "OPERATE_LOG"
 class Table:
     """Oracleテーブルアクセスクラス
     """
-    def __init__(self, tableName, db:Table=None, bulkCount=1000, debug=False):
+    def __init__(self, tableName, user=None, db:Table=None, bulkCount=1000, debug=None):
         """コンストラクタ
 
         Args:
             tableName (str): テーブル名
+            user (str): ユーザー名
             db (Table, optional): テーブルアクセスハンドル(テーブル違いで同じセッション利用). Defaults to None.
             bulkCount (int, optional): バルクインサートの件数. Defaults to 1000.
             debug (bool, optional): デバッグするか. Defaults to False.
         """
-        self.debug = debug
+        self.debug = debug if debug is not None else False
         self.bulkCount = bulkCount
         self.bulkCountCurrent = 0
         self.insertCount = 0
         self.insertDataList = []
+        self.user = user
         # テーブルアクセスハンドルがあればそれを利用、なければ新規に接続
         if db is not None:
             self.connection = db.connection
             self.newConnection = False
+            if user is None:
+                self.user = db.user
+            if debug is None:
+                self.debug = db.debug
         else:
             self.connection = self._get_connection()
             self.newConnection = True
@@ -41,6 +47,9 @@ class Table:
         for queryType in ["select", "insert", "delete", "update"]:
             self.sqls[queryType] = self._readSqlFile(queryType)
         self.tranFlag = False
+        # 内部操作ログ用テーブル接続準備
+        self.logDb = Table(tableName=LOG_TABLE_NAME, db=self) if tableName != LOG_TABLE_NAME else None
+
 
     def _getTemplateSqlFileName(self, queryType):
         """SQLファイル名取得
@@ -95,12 +104,37 @@ class Table:
     def __enter__(self):
         return self 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.logDb:
+            self.logDb.flush()
         if self.newConnection:
             if self.tranFlag:
                 self.connection.rollback()
+            elif self.logDb and self.logDb.tranFlag:
+                self.logDb.connection.commit()
+                if self.debug:
+                    print("Log commit.")
             self.connection.close()
             self.newConnection = False 
+    def flush(self):   # これすごい、AIが勝手にflだけ打ったら下記を出してきた
+        """バルクインサートの残りをフラッシュする
+        """
+        if self.bulkCountCurrent > 0:
+            ret = self._insertMany()
+            if not self.logDb:
+                if self.debug:
+                    print(f"Log flush result: {ret}")
+        else:
+            ret = None
+        return ret
     def commit(self):
+        # インサートがある場合は操作ログを出力する（インサート時には操作ログを出力していないため）
+        # と言いながら、実際にはまだバルクインサートのためにinsertCountで件数を保持しているだけで、
+        # 実際のインサートは後続の_insertMany()で行われる。_insertMany()の後では件数が失われるので先にログ出力している。
+        if self.insertCount > 0:
+            self._insertExecLog("insert", None, str(self.insertCount))
+        # ログテーブルにログを残すために、コミット前にバルクインサートの残りをフラッシュする
+        if self.logDb:
+            self.logDb.flush()
         # バルクインサートの残りがあればコミット前に実行する
         self._insertMany()
         if self.tranFlag:
@@ -193,7 +227,26 @@ class Table:
             cursor.execute(sqlString, **params)
             columns = [col.name for col in cursor.description]
             cursor.rowfactory = lambda *args: dict(zip(columns, args))
-            return cursor.fetchall()
+            ret = cursor.fetchall()
+            self._insertExecLog("select", params, cursor.rowcount)
+            return ret
+
+    def _insertExecLog(self, queryType, params, result):
+        """ログテーブルに操作ログを挿入する
+
+        Args:
+            queryType (str): クエリのタイプ
+            params (dict): クエリのパラメータ
+            result (str): クエリの結果
+        """
+        if self.logDb:
+            self.logDb.insert({
+                "OPERATION": queryType,
+                "USE_TABLE": self.tableName,
+                "KEYS": str(params),
+                "RESULT": str(result),
+                "OPERATION_USER": self.user,
+            })
 
     def _execute(self, queryType, **params):
         """実行
@@ -210,6 +263,8 @@ class Table:
         with self.connection.cursor() as cursor:
             cursor.execute(sqlString, **params)
             self.tranFlag = True
+            # 操作ログを挿入
+            self._insertExecLog(queryType, params, cursor.rowcount)
             return {self.tableName: cursor.rowcount}
 
     def insertOne(self, **params):
@@ -235,7 +290,8 @@ class Table:
             sqlString = self._makeSqlString("insert", self.insertDataList[0])
             with self.connection.cursor() as cursor:
                 cursor.executemany(sqlString, self.insertDataList)
-                print(f"Inserted {cursor.rowcount}/{self.insertCount} rows into {self.tableName}")
+                if self.logDb is not None or self.debug:
+                    print(f"Inserted {cursor.rowcount}/{self.insertCount} rows into {self.tableName}")
                 self.tranFlag = True
             self.insertDataList = []
             self.bulkCountCurrent = 0   
@@ -254,21 +310,25 @@ def getArgs(argv, minArgs=2):
     """引数を取得
 
     Args:
-        argv (list): 引数(sys.argv)プログラム名 テーブル名 任意のキー:値ペア --debug
+        argv (list): 引数(sys.argv)プログラム名 テーブル名 任意のキー:値ペア --user:ユーザ名 --debug
         minArgs (int, optional): 最低引数の数. Defaults to 2.
 
     Returns:
-        str, dict, debug: テーブル名, 項目の辞書, デバッグフラグ
+        str, dict, str, debug: テーブル名, 項目の辞書, ユーザー名, デバッグフラグ
     """
     keyValueStr0 = "<key:value> "
     keyValueStr =  "[keyset] " if (minArgs - 2) <= 0 else "allset|keyset|" + keyValueStr0 * (minArgs - 2)
-    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [--debug]"
+    errMessage = f"Usage: python {argv[0]} <tableName> {keyValueStr}[{keyValueStr0}...] [--user:<username>] [--debug]"
 
     keys = {}
+    user = "system"
     debug = False
     ignoreArgNum = 0
     for arg in argv[2:]:
-        if arg == "--debug":
+        if arg[:7] == "--user:":
+            user = arg[7:]
+            ignoreArgNum += 1
+        elif arg == "--debug":
             debug = True
             ignoreArgNum += 1
         elif arg == "allset":
@@ -294,7 +354,7 @@ def getArgs(argv, minArgs=2):
     # 第一引数はテーブル名
     tableName = argv[1].upper()  # テーブル名は大文字に変換
     
-    return tableName, keys, debug
+    return tableName, keys, user, debug
 
 
 def getFileArgs(argv):
@@ -304,22 +364,28 @@ def getFileArgs(argv):
         argv (list): 引数(sys.argv)プログラム名 テーブル名 ファイル名 --debug
 
     Returns:
-        str, str, debug: テーブル名, ファイル名, デバッグフラグ
+        str, str, str, debug: テーブル名, ファイル名, ユーザー名, デバッグフラグ
     """
-    errMessage = f"Usage: python {argv[0]} <tableName> <fileName> [--debug]"
-    if len(argv) < 3:
-        print(errMessage)
-        sys.exit(1)
+    errMessage = f"Usage: python {argv[0]} <tableName> <fileName> [--user:<userName>] [--debug]"
 
     tableName = argv[1].upper()
     fileName = argv[2]
+    userName = "system"
     debug = False
 
+    ignoreArgNum = 0
     if len(argv) > 3:
         if argv[3] == "--debug":
             debug = True
+            ignoreArgNum = 1
+        elif argv[3].startswith("--user:"):
+            userName = argv[3][7:]
+            ignoreArgNum = 1
         else:
             print(errMessage)
             sys.exit(1)
+    if len(argv)-ignoreArgNum < 3:
+        print(errMessage)
+        sys.exit(1)
 
-    return tableName, fileName, debug
+    return tableName, fileName, userName, debug

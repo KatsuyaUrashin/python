@@ -1,4 +1,14 @@
-def abc(j, *x):
+def abc(g, h, i, j, k):
+    x = [g, h, i, j, k]
+    y = sum(x)
+    return y
+def abc2(g, h, *x):
+    y = sum(x)
+    return y
+def abc3(*x):
+    y = sum(x)
+    return y
+def abc4(x):
     y = sum(x)
     return y
 
@@ -13,6 +23,13 @@ def yyy(j, KEY):
 
 l = [1, 2, 3, 4, 5]
 print(abc(*l))
+print(abc2(*l))
+print(abc3(*l))
+print(abc4(l))
+exit(0)
+# -------------
+
+
 print(abc(2, 2, 3))
 print(zzz(1, KEY=44, zzz=3))
 print(zzz(1, 44, None, 3))
