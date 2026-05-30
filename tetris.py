@@ -33,7 +33,7 @@ SHAPES = {
     'J': [(0, 0), (0, 1), (1, 1), (2, 1)],
     'L': [(2, 0), (0, 1), (1, 1), (2, 1)],
 }
-
+aa = "#7400f0"
 # Colors
 COLORS = {
     'I': '#00f0f0',
@@ -355,9 +355,13 @@ class Tetris:
     def _draw_cell(self, x: int, y: int, color: str, offset: bool = False, outline: bool = False):
         px = x * CELL_SIZE + (20 if offset else 0)
         py = y * CELL_SIZE + 20
+        self.canvas.create_rectangle(0, 20, CELL_SIZE*10, CELL_SIZE*20 + 20, 
+                                    fill="", outline=COLORS["ghost"], width=1)
+        self.canvas.create_rectangle(0, 20, CELL_SIZE*10, 20, 
+                                    fill="", outline="#000000", width=1)
         if outline:
-            self.canvas.create_rectangle(px, py, px + CELL_SIZE, py + CELL_SIZE, 
-                                        fill="", outline=color, width=2)
+            self.canvas.create_rectangle(px, py, px + CELL_SIZE+1, py + CELL_SIZE, 
+                                        fill="", outline=color, width=1)
         else:
             self.canvas.create_rectangle(px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1, 
                                         fill=color, outline="#222")
