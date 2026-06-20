@@ -389,3 +389,37 @@ def getFileArgs(argv):
         sys.exit(1)
 
     return tableName, fileName, userName, debug
+
+
+
+def getFileArgs2(argv):
+    """ファイル名の引数を取得
+
+    Args:
+        argv (list): 引数(sys.argv)プログラム名 ファイル名 --debug
+
+    Returns:
+        str, str, debug: ファイル名, ユーザー名, デバッグフラグ
+    """
+    errMessage = f"Usage: python {argv[0]} <fileName> [--user:<userName>] [--debug]"
+
+    fileName = argv[1]
+    userName = "system"
+    debug = False
+
+    ignoreArgNum = 0
+    if len(argv) > 2:
+        if argv[2] == "--debug":
+            debug = True
+            ignoreArgNum = 1
+        elif argv[2].startswith("--user:"):
+            userName = argv[2][7:]
+            ignoreArgNum = 1
+        else:
+            print(errMessage)
+            sys.exit(1)
+    if len(argv)-ignoreArgNum < 2:
+        print(errMessage)
+        sys.exit(1)
+
+    return fileName, userName, debug

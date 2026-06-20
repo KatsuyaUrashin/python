@@ -5,7 +5,6 @@ KEYS = ('GAKUSEKI_NO', 'MATH_SCORE', 'ENGLISH_SCORE', 'JAPANESE_SCORE')
 
 # Alt+←(左矢印)で戻れるよ
 def procMap(i, data, option):
-    global KEYS
     if i == 0:
         print(f"data: {data}")
         return None
