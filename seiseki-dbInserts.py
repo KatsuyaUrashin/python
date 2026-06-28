@@ -23,7 +23,7 @@ def main():
                                 print(f"line {i}: {ret}")
                 conn.commit()
             except Exception as e:
-                print(f"Error occurred: {e}")
+                print(f"Main Error occurred: {e}")
                 conn.rollback()
             sys.exit(0)
     finally:
