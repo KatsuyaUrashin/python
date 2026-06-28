@@ -3,8 +3,9 @@
 import sys
 from libs.OraAc import Table, getFileArgs2
 from libs.FileAc import FIL
-from maps.mapSeiseki import procMap
+# from maps.mapSeiseki import procMap
 from libs.utils import ProcessManager
+import importlib
 
 def main():
     process_manager = ProcessManager()
@@ -12,11 +13,13 @@ def main():
         fileName, user, debug = getFileArgs2(sys.argv)
         process_manager.start_process()
         option = {"tableName": 'SEISEKI', "fileName": fileName, "debug": debug, 'count': 0}
+        # 動的にマップをインポートして使用する
+        map = importlib.import_module('maps.map'+ option['tableName'].capitalize())
         with Table(tableName='SEISEKI', user=user, debug=debug) as conn:
             try:
                 with FIL(fName=fileName, delimt=",", enc='utf-8-sig') as fp:
                     for i, data in enumerate(fp.readLine()):
-                        data = procMap(i, data, option)  # データをマッピング
+                        data = map.procMap(i, data, option)  # データをマッピング
                         if data is not None:
                             ret = conn.insert(data)
                             if debug:
