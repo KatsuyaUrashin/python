@@ -7,10 +7,8 @@ from maps.map1 import procMap
 from libs.utils import ProcessManager
 
 def main():
-    process_manager = ProcessManager()
-    try:
+    with ProcessManager():
         tableName, fileName, user, debug = getFileArgs(sys.argv)
-        process_manager.start_process()
         option = {"tableName": tableName, "fileName": fileName, "debug": debug, 'count': 0}
         with Table(tableName=tableName, user=user, debug=debug) as conn:
             try:
@@ -39,8 +37,6 @@ def main():
                 print(f"Error occurred: {e}")
                 conn.rollback()
             sys.exit(0)
-    finally:
-        process_manager.end_process()
 
 if __name__ == '__main__':
     main()

@@ -8,10 +8,8 @@ from libs.utils import ProcessManager
 import importlib
 
 def main():
-    process_manager = ProcessManager()
-    try:
+    with ProcessManager():
         fileName, user, debug = getFileArgs2(sys.argv)
-        process_manager.start_process()
         option = {"tableName": 'SEISEKI', "fileName": fileName, "debug": debug, 'count': 0}
         # 動的にマップをインポートして使用する
         map = importlib.import_module('maps.map'+ option['tableName'].capitalize())
@@ -29,8 +27,6 @@ def main():
                 print(f"Main Error occurred: {e}")
                 conn.rollback()
             sys.exit(0)
-    finally:
-        process_manager.end_process()
 
 if __name__ == '__main__':
     main()

@@ -40,3 +40,6 @@ where rownum <= 10
 
 select * from ABC
 /
+
+select * from SEISEKI
+/
